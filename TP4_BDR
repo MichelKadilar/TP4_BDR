@@ -1,0 +1,189 @@
+------- Exercice 1 ------
+
+
+-- Question 3 :
+
+BEGIN;
+INSERT INTO test
+VALUES (3),
+       (4);
+
+SELECT *
+from test;
+
+ROLLBACK;
+
+------- Exercice 2 ------
+
+-- Question 1
+
+BEGIN;
+INSERT INTO test
+VALUES (9),
+       (10);
+SELECT *
+from test;
+
+-- Oui, on voit les valeurs 9 et 10
+
+-- Question 2
+
+-- fermer l'application, puis :
+SELECT *
+from test;
+
+-- Résultat : 9 et 10 ont "disparus" de la table
+
+-------- Exercice 3 ------------------
+
+-- Question 1 :
+
+-- D'abord, créer un user :
+
+CREATE ROLE michel WITH LOGIN SUPERUSER PASSWORD 'michel';
+CREATE ROLE michel2 WITH LOGIN SUPERUSER PASSWORD 'michel2';
+
+-- Ouvrir deux nouvelles connexions en vous connectant à votre base de données
+-- grâce à vos nouveaux utilisateurs : pour cela, demandez-moi...
+
+-- Question 2 :
+
+-- Dans le terminal de user 1 :
+
+INSERT INTO test
+VALUES (100);
+SELECT *
+from test;
+
+-- Dans le terminal de user 2 :
+
+SELECT *
+from test;
+
+-- On voit que les deux users voient la même table au final, car chaque requête est en fait implicitement executée
+-- à l'intérieur d'une transaction.
+-- On a fait les choses l'une après l'autre, d'où le fait que la première transaction a eu le temps de se finir
+-- et que le deuxième user voit la même table que le premier user.
+
+-- Question 3 :
+
+-- Pour désactiver l'autocommit pour le user courant :
+
+\set AUTOCOMMIT off
+
+-- OU
+
+set autocommit=0; -- dans un terminal
+
+-- Puis :
+
+-- Pour le user 1 :
+
+INSERT INTO test
+VALUES (200);
+select *
+from test;
+
+-- Pour le user 2 :
+
+select *
+from test;
+
+-- On voit que les deux users ne voient pas la même chose car les requêtes
+-- ne sont plus automatiquement incluses dans des transactions. Autrement dit, rien n'est sauvegardé d'une session à l'autre.
+-- Une fois que le user 1 se sera deconnecté, ses changements seront totalement perdus s'il ne fait pas manuellement un commit.
+
+-- Question 4 :
+
+\set autocommit on -- Pour revenir au mode autocommit.
+
+-- OU
+
+set autocommit=1; -- dans un terminal
+
+-- user1 :
+BEGIN;
+INSERT INTO test
+VALUES (1000);
+select *
+from test;
+
+-- user2 :
+
+select *
+from test;
+
+-- les deux users ne voient pas la même chose. Pourquoi ?
+-- Car le user1 n'a pas commit ses changements. Il n'a donc pas "poussé" ses changements
+-- sur la table à laquelle tout un chacun peut accéder. Donc le user2 ne voit pas la même chose
+-- que le user1 puisque les changements de user1 ne sont présents que sur sa session.
+
+-- Question 5 :
+
+-- user1 :
+
+COMMIT;
+SELECT *
+from test;
+
+-- user2 :
+
+SELECT *
+from test;
+
+-- Les deux users voient la même table. D'ailleurs, la valeur insérée pendant que le mode autocommit
+-- était desactivé est également présente.
+-- Pourquoi ?
+-- Car le user1 n'a pas fermé sa session. Ainsi, la "prochaine" requête qu'il fait (s'il active le mode autocommit)
+-- va commit la requête courante ainsi que toutes les précédentes faites durant que l'autocommit était desactivé.
+
+-- Question 6 :
+
+
+-- user2 :
+
+BEGIN;
+
+-- user1 :
+
+BEGIN;
+
+-- user1 :
+
+UPDATE test
+SET test_int = test_int * 2;
+
+select * from test;
+
+-- user2 :
+
+UPDATE test
+SET test_int = test_int + 1;
+
+select * from test;
+
+-- Les deux users voient des tables résultantes différentes car leurs sessions sont séparées et
+-- qu'ils n'ont pas commit manuellement (car ils ont manuellement ouverts une transaction).
+
+-- Question 7  :
+
+-- user1 :
+
+COMMIT;
+select * from test;
+
+-- On voit dans ce cas que la table de la session du user1 contient uniquement ses modifications.
+-- C'est à dire : table * 2
+
+
+-- Question 8:
+
+-- user2 :
+
+COMMIT;
+select * from test;
+
+-- On voit dans ce cas que la table de la session du user2 contient les modifications du user1 ainsi que les siennes.
+-- C'est à dire : (table * 2) et (table + 1)
+-- Pourquoi ?
+-- Car le user1 a terminé sa transaction avant le user2, donc les changements du user2 sont appliqués après ceux du user1.
