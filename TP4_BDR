@@ -73,7 +73,7 @@ from test;
 
 -- OU
 
-set autocommit=0; -- dans un terminal
+set AUTOCOMMIT=0; -- dans un terminal
 
 -- Puis :
 
@@ -95,11 +95,11 @@ from test;
 
 -- Question 4 :
 
-\set autocommit on -- Pour revenir au mode autocommit.
+\set AUTOCOMMIT on -- Pour revenir au mode autocommit.
 
 -- OU
 
-set autocommit=1; -- dans un terminal
+set AUTOCOMMIT=1; -- dans un terminal
 
 -- user1 :
 BEGIN;
