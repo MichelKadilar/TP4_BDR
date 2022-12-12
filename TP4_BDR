@@ -1,5 +1,18 @@
 ------- Exercice 1 ------
 
+-- Question 1 :
+
+CREATE TABLE test(
+    test_int integer
+);
+
+-- Question 2 :
+
+BEGIN;
+INSERT INTO test VALUES (1),(2);
+COMMIT;
+SELECT * from test;
+
 
 -- Question 3 :
 
